@@ -1,0 +1,33 @@
+package jrJava.memorycardgame;
+
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.pm.ActivityInfo;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+
+public class MainActivity extends Activity {
+
+	
+	public static Context context;
+	
+	
+	protected void onCreate(Bundle savedInstanceState) {
+		
+		super.onCreate(savedInstanceState);
+		
+		//Log.d("jrJava", "I am inside the onCreate() method.");
+		
+		context = this;
+		
+		GameView theView = new GameView(this);
+		
+		setContentView(theView);
+		
+		
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+	}
+}
