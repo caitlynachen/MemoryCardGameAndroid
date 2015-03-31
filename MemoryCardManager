@@ -1,0 +1,161 @@
+package jrJava.memorycardgame;
+
+import java.util.ArrayList;
+
+import android.R.color;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.view.MotionEvent;
+
+
+public class MemoryCardManager {
+
+	
+	public static final int NUM_OF_COLS = 4, NUM_OF_ROWS = 5;
+	public static final int SIZE;
+	
+	private static MemoryCard[] cards;
+	
+	private static int numOfSelection;
+	private static int firstSelection, secondSelection;
+	private static long waitTargetTime, waitDuration = 1000;
+	private static boolean shouldWait;
+	
+	
+	static {
+		
+		Resources res = MainActivity.context.getResources();
+		
+		Bitmap[] images = new Bitmap[]{
+				BitmapFactory.decodeResource(res, R.drawable.apple),
+				BitmapFactory.decodeResource(res, R.drawable.toilet_bowl),
+				BitmapFactory.decodeResource(res, R.drawable.cheese),
+				BitmapFactory.decodeResource(res, R.drawable.denture),
+				BitmapFactory.decodeResource(res, R.drawable.dog),
+				BitmapFactory.decodeResource(res, R.drawable.soccer_ball),
+				BitmapFactory.decodeResource(res, R.drawable.sock),
+				BitmapFactory.decodeResource(res, R.drawable.santa),
+				BitmapFactory.decodeResource(res, R.drawable.toilet_paper),
+				BitmapFactory.decodeResource(res, R.drawable.pizza)
+		};
+		
+		Bitmap backsideImage = BitmapFactory.decodeResource(res, R.drawable.backside);
+		
+
+		SIZE = GameView.width/NUM_OF_COLS;
+		
+		cards = new MemoryCard[NUM_OF_COLS*NUM_OF_ROWS];
+		
+		for(int i=0; i<NUM_OF_COLS*NUM_OF_ROWS; i++){
+			cards[i] = new MemoryCard(i, i/NUM_OF_COLS, i%NUM_OF_COLS, SIZE);
+		}
+		
+		
+		ArrayList<MemoryCard> list = new ArrayList<MemoryCard>();
+		for(int i=0; i<cards.length; i++){
+			list.add(cards[i]);
+		}
+		
+		for(int i=0; i<NUM_OF_COLS*NUM_OF_ROWS/2; i++){
+			list.remove( (int)(list.size()*Math.random()) ).setBitmaps(images[i], backsideImage);
+			list.remove( (int)(list.size()*Math.random()) ).setBitmaps(images[i], backsideImage);
+		}
+		
+		for(int i=0; i<NUM_OF_COLS*NUM_OF_ROWS; i++){
+			cards[i].hide();
+		}
+	}
+	
+	
+	public static void draw(Canvas c){
+		for(int i=0; i<NUM_OF_COLS*NUM_OF_ROWS; i++){
+			cards[i].draw(c);
+		}
+		
+	}
+	
+	
+	public static void respondToFingers(MotionEvent e){
+		if(numOfSelection>=2) return;
+		
+		int selected = -1;
+		for(int i=0; i<cards.length; i++){
+			if(cards[i].respondToFingers((int)e.getX(), (int)e.getY())){
+				selected = i;
+				break;
+			}
+		}
+				
+		if(selected==-1) return;
+		
+		if(cards[selected].isRemoved()) return;
+		
+		
+		if(numOfSelection==0){
+			firstSelection = selected;
+			cards[firstSelection].show();
+			numOfSelection = 1;
+		}
+		else if(numOfSelection==1){
+			
+			if(selected==firstSelection) return;
+			
+			secondSelection = selected;
+			cards[secondSelection].show();
+			numOfSelection = 2;
+			
+			shouldWait = true;
+			waitTargetTime = System.currentTimeMillis() + waitDuration;
+		}
+	}
+	
+	
+	
+	public static void updateCards(){
+		
+		if(!shouldWait) return;
+		
+		if(System.currentTimeMillis()>waitTargetTime){
+			
+			if(cards[firstSelection].getBitmap()==cards[secondSelection].getBitmap()){
+				// play a pleasant sound.
+				// increase score.
+				cards[firstSelection].remove();
+				cards[secondSelection].remove();
+				// if all cards have been removed, call game over.
+			}
+			else {
+				// play a unpleasant sound.
+				// decrease score.
+				cards[firstSelection].hide();
+				cards[secondSelection].hide();
+			}
+			
+			shouldWait = false;
+			numOfSelection =0;
+		}
+		
+		
+	}
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
