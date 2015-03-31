@@ -1,0 +1,86 @@
+# MemoryCardGameAndroid
+package jrJava.memorycardgame;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+
+
+public class GameView extends SurfaceView implements Runnable {
+
+	public static int width, height;
+	
+	private SurfaceHolder holder;
+	private boolean gameThreadStarted;
+	private Thread thread;
+	
+
+	public GameView(Context c){
+		super(c);
+		
+		//Log.d("jrJava", "I am inside the GameView contructor.");
+		
+		thread = new Thread(this);
+		
+		holder = this.getHolder();
+		holder.addCallback(
+				
+					new SurfaceHolder.Callback(){
+
+						public void surfaceChanged(SurfaceHolder arg0,
+								int arg1, int arg2, int arg3) { }
+
+						public void surfaceCreated(SurfaceHolder arg0) {
+							thread.start();
+						}
+
+						public void surfaceDestroyed(SurfaceHolder arg0) { }
+						
+					}
+				);
+	}
+
+
+
+	public boolean onTouchEvent(MotionEvent e){
+		
+		if(e.getAction()==MotionEvent.ACTION_DOWN){
+			MemoryCardManager.respondToFingers(e);
+		}
+		
+		return true;
+	}
+
+
+	public void run(){
+		Canvas c = holder.lockCanvas();
+		width = c.getWidth();
+		height = c.getHeight();
+		holder.unlockCanvasAndPost(c);
+
+
+		while(true){
+
+			c = holder.lockCanvas();
+
+			c.drawColor(Color.WHITE);
+			
+			MemoryCardManager.updateCards();
+			MemoryCardManager.draw(c);
+			
+			holder.unlockCanvasAndPost(c);
+
+			try{
+				Thread.currentThread().sleep(10);
+			}
+			catch(InterruptedException ie){ }
+		}
+
+	}
+
+}
